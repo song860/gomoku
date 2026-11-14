@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2eee5">
+  <meta name="description" content="干净、自然、棋力强劲的无禁手五子棋人机对战。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f2eee5'/%3E%3Ccircle cx='25' cy='32' r='14' fill='%23241f1b'/%3E%3Ccircle cx='39' cy='32' r='14' fill='%23fffdf8' stroke='%23c9c0b2' stroke-width='2'/%3E%3C/svg%3E">
+  <title>五子棋 · 人机对战</title>
+  <style>
+/*__CSS__*/
+  </style>
+</head>
+<body>
+  <div class="page-glow" aria-hidden="true"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="五子棋首页" id="brand-home">
+        <span class="brand-stones" aria-hidden="true">
+          <i class="stone black"></i>
+          <i class="stone white"></i>
+        </span>
+        <span class="brand-copy">
+          <strong>五子棋</strong>
+          <small>GOMOKU</small>
+        </span>
+      </a>
+      <div class="top-actions">
+        <span class="rule-badge"><i></i>15 × 15 · 无禁手</span>
+        <button id="btn-settings" class="icon-btn" type="button" title="设置" aria-label="打开设置">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"></path>
+            <path d="M19.4 13.5a7.9 7.9 0 0 0 0-3l2-1.4-2-3.4-2.3 1a8.2 8.2 0 0 0-2.6-1.5L14.2 2h-4.4l-.3 3.2a8.2 8.2 0 0 0-2.6 1.5l-2.3-1-2 3.4 2 1.4a7.9 7.9 0 0 0 0 3l-2 1.4 2 3.4 2.3-1a8.2 8.2 0 0 0 2.6 1.5l.3 3.2h4.4l.3-3.2a8.2 8.2 0 0 0 2.6-1.5l2.3 1 2-3.4-2-1.4Z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="board-card" aria-label="棋盘区域">
+        <div class="board-head">
+          <div id="turn-pill" class="turn-pill">
+            <span id="turn-stone" class="stone black"></span>
+            <span id="turn-text">轮到你落子</span>
+          </div>
+          <div class="board-head-meta">
+            <span id="move-count">第 1 手</span>
+            <span class="dot-sep" aria-hidden="true"></span>
+            <span id="side-label">你执黑</span>
+          </div>
+        </div>
+
+        <div class="board-wrap" id="board-wrap">
+          <canvas id="board" width="760" height="760" tabindex="0" aria-label="五子棋棋盘，使用鼠标或方向键与回车落子"></canvas>
+        </div>
+
+        <div id="result-banner" class="result-banner" role="status" aria-live="polite" hidden>
+          <span id="result-icon" class="result-icon" aria-hidden="true"></span>
+          <span class="result-copy">
+            <strong id="result-title"></strong>
+            <small id="result-sub"></small>
+          </span>
+          <button id="btn-again" type="button" class="btn btn-small btn-primary">再来一局</button>
+        </div>
+
+        <div class="board-foot">
+          <div class="legend">
+            <span class="legend-item"><i class="stone black mini"></i>你</span>
+            <span class="legend-item"><i class="stone white mini"></i>电脑</span>
+            <span class="legend-item legend-turn" id="legend-turn"></span>
+          </div>
+          <span class="kbd-tip">方向键移动 · 回车落子</span>
+        </div>
+      </section>
+
+      <aside class="sidebar" aria-label="对局信息与操作">
+        <section class="panel status-panel">
+          <div class="panel-kicker">对局状态</div>
+          <div class="status-main">
+            <span id="status-orb" class="status-orb black"></span>
+            <div class="status-copy">
+              <h1 id="status-title" aria-live="polite">轮到你落子</h1>
+              <p id="status-sub">执黑 · 大师难度</p>
+            </div>
+          </div>
+          <div id="ai-progress" class="ai-progress" hidden>
+            <span class="thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span id="ai-progress-text">正在计算</span>
+          </div>
+          <div id="ai-stats" class="ai-stats" hidden></div>
+        </section>
+
+        <section class="panel control-panel">
+          <button id="btn-new" class="btn btn-primary btn-block" type="button">新对局</button>
+          <div class="btn-row">
+            <button id="btn-undo" class="btn btn-ghost" type="button">悔棋</button>
+            <button id="btn-hint" class="btn btn-ghost" type="button">提示</button>
+          </div>
+          <button id="btn-resign" class="btn btn-quiet btn-block" type="button">认输</button>
+        </section>
+
+        <section class="panel difficulty-panel">
+          <div class="panel-row">
+            <div>
+              <div class="panel-kicker">AI 难度</div>
+              <div id="difficulty-name" class="panel-value">大师</div>
+            </div>
+            <span id="difficulty-time" class="small-muted">单步约 6 秒</span>
+          </div>
+          <div class="segmented" id="difficulty-group" role="group" aria-label="AI 难度">
+            <button type="button" data-difficulty="easy">入门</button>
+            <button type="button" data-difficulty="normal">普通</button>
+            <button type="button" data-difficulty="strong">较强</button>
+            <button type="button" data-difficulty="master">大师</button>
+            <button type="button" data-difficulty="nightmare">噩梦</button>
+          </div>
+        </section>
+
+        <section class="panel history-panel">
+          <div class="panel-row">
+            <div class="panel-kicker">棋谱</div>
+            <span id="history-count" class="small-muted">0 手</span>
+          </div>
+          <div id="history-list" class="history-list">
+            <div class="history-empty">落子后，棋谱会显示在这里。</div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="app-foot">
+      <span>无禁手 · 五连及以上获胜</span>
+      <span class="foot-note">本地运行 · 无需联网</span>
+    </footer>
+  </div>
+
+  <dialog id="new-dialog" class="modal">
+    <form method="dialog" class="modal-card" id="new-form">
+      <div class="modal-head">
+        <div>
+          <div class="panel-kicker">新的开始</div>
+          <h2>开始新对局</h2>
+        </div>
+        <button type="button" class="icon-btn modal-close" data-close aria-label="关闭">×</button>
+      </div>
+
+      <div class="field">
+        <span class="field-label">你执</span>
+        <div class="choice-row" id="color-choice">
+          <button type="button" class="choice selected" data-color="1">
+            <i class="stone black"></i>
+            <strong>黑棋</strong>
+            <small>先手</small>
+          </button>
+          <button type="button" class="choice" data-color="2">
+            <i class="stone white"></i>
+            <strong>白棋</strong>
+            <small>后手</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">难度</span>
+        <div class="choice-grid" id="new-difficulty">
+          <button type="button" class="choice small" data-difficulty="easy"><strong>入门</strong><small>轻松</small></button>
+          <button type="button" class="choice small" data-difficulty="normal"><strong>普通</strong><small>约 1 秒</small></button>
+          <button type="button" class="choice small" data-difficulty="strong"><strong>较强</strong><small>约 3 秒</small></button>
+          <button type="button" class="choice small" data-difficulty="master"><strong>大师</strong><small>约 6 秒</small></button>
+          <button type="button" class="choice small choice-nightmare" data-difficulty="nightmare"><strong>噩梦</strong><small>Rapfi</small></button>
+        </div>
+      </div>
+
+      <p class="modal-note">选择白棋时，电脑将执黑先行。对局中可随时悔棋。噩梦模式由浏览器内置的 Rapfi 引擎计算，无需启动任何程序。</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close>取消</button>
+        <button type="submit" class="btn btn-primary" id="btn-start">开始对局</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog" class="modal">
+    <form method="dialog" class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="panel-kicker">偏好</div>
+          <h2>设置</h2>
+        </div>
+        <button type="button" class="icon-btn modal-close" data-close aria-label="关闭">×</button>
+      </div>
+
+      <div class="toggle-list">
+        <label class="toggle-row">
+          <span><strong>落子音效</strong><small>轻快的木质落子声</small></span>
+          <span class="switch"><input type="checkbox" id="set-sound"><i></i></span>
+        </label>
+        <label class="toggle-row">
+          <span><strong>落子动画</strong><small>棋子落下时轻微缩放</small></span>
+          <span class="switch"><input type="checkbox" id="set-animation"><i></i></span>
+        </label>
+        <label class="toggle-row">
+          <span><strong>棋盘坐标</strong><small>显示 A–O 与 1–15</small></span>
+          <span class="switch"><input type="checkbox" id="set-coordinates"><i></i></span>
+        </label>
+        <label class="toggle-row">
+          <span><strong>显示手数</strong><small>在棋子上标出落子顺序</small></span>
+          <span class="switch"><input type="checkbox" id="set-numbers"><i></i></span>
+        </label>
+      </div>
+
+      <div class="modal-actions modal-actions-split">
+        <button type="button" class="btn btn-quiet" id="btn-reset-save">清除本地对局</button>
+        <button type="submit" class="btn btn-primary">完成</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="engine-dialog" class="modal">
+    <form method="dialog" class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="panel-kicker">噩梦模式</div>
+          <h2 id="engine-title">Rapfi 引擎未就绪</h2>
+        </div>
+        <button type="button" class="icon-btn modal-close" data-close aria-label="关闭">×</button>
+      </div>
+
+      <div class="engine-help">
+        <p>噩梦模式由开源 <strong>Rapfi</strong> 引擎在本机浏览器内计算，不需要联网，也不需要安装或启动额外程序。</p>
+        <ol>
+          <li>首次进入噩梦时，会加载约 1.2 MB 的 WebAssembly 引擎。</li>
+          <li>每步思考约 7 秒，计算在后台线程进行，界面不会卡住。</li>
+          <li>如果加载失败，可以重试本手，或改用大师 AI 继续。</li>
+        </ol>
+        <p class="engine-message" id="engine-message"></p>
+        <p class="engine-quiet">入门、普通、较强、大师四档不加载 Rapfi，启动更快。</p>
+      </div>
+
+      <div class="modal-actions engine-actions">
+        <button type="button" class="btn btn-ghost" id="btn-engine-fallback" hidden>改用大师 AI</button>
+        <button type="button" class="btn btn-ghost" id="btn-engine-retry" hidden>重试本手</button>
+        <button type="button" class="btn btn-primary" data-close>知道了</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script id="engine-source" type="text/plain">
+/*__ENGINE__*/
+  </script>
+  <script id="worker-source" type="text/plain">
+/*__WORKER__*/
+  </script>
+  <!--
+    Rapfi WebAssembly engine, GPL-3.0.
+    Upstream: https://github.com/dhbloo/rapfi (commit 3c94c2a976f24a0dd1c5517623e9ab6fffe66bd7)
+    Build/source offer: https://github.com/ningh-o/engine-builds/tree/main/rapfi
+    Local notice: vendor/rapfi/SOURCE.md and vendor/rapfi/BUILD.md
+    License: https://www.gnu.org/licenses/gpl-3.0.txt
+  -->
+  <script id="rapfi-worker-source" type="text/plain">
+/*__RAPFI_WORKER__*/
+  </script>
+  <script>
+/*__APP__*/
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Local deployment secret (never commit)
+.github-token
+.github-token.txt
+
+# Test/browser artifacts
+.artifacts/
+.chrome-profile*/
+.ui-profile/
+.measure-profile/
+.nightmare-wasm-profile/
+.nightmare-unsupported-profile/
+.preview-profile/
+*.log
